@@ -36,7 +36,7 @@ public class ControladorPersona {
     Mono<ResponseEntity<Persona>> getPersonaId(@PathVariable Integer id) {
         return repositorioPersona.findById(id)
                 .map(persona -> ResponseEntity.ok().body(persona))
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se encontró la persona")));
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la persona")));
     }
 
     //eliminar una persona por id

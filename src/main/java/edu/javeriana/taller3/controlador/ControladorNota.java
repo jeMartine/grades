@@ -22,6 +22,13 @@ public class ControladorNota {
         return repositorioNota.findAll();
     }
 
+    @GetMapping("/estudiante/{id}")
+    public Flux<ResponseEntity<Nota>> getNotasByEstudianteId(@PathVariable Integer estudianteId) {
+        return repositorioNota.findByEstudianteId(estudianteId)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
     @PostMapping("/add")
     Mono<Nota> addNota(@RequestBody Nota nota){
         return repositorioNota.save(nota);
