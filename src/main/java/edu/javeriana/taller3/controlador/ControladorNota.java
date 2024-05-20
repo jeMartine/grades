@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,21 +27,29 @@ public class ControladorNota {
         return repositorioNota.save(nota);
     }
 
-    //retornar una persona por id
+    //retornar una nota por id
     @GetMapping("/{id}")
     Mono<ResponseEntity<Nota>> getCursoId(@PathVariable Integer id) {
         return repositorioNota.findById(id)
-                .map(nota -> ResponseEntity.ok().body(nota))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .flatMap(nota -> Mono.just(ResponseEntity.ok().body(nota)))
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se encontró la nota")));
     }
 
-    //eliminar una persona por id
+
+    //eliminar una nota por id
     @DeleteMapping("/delete/{id}")
     Mono<ResponseEntity<Void>> deleteNotaById(@PathVariable Integer id){
-        return repositorioNota.deleteById(id)
-                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)))
-                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return repositorioNota.existsById(id)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return repositorioNota.deleteById(id)
+                                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)));
+                    } else {
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la nota con el ID proporcionado"));
+                    }
+                });
     }
+
 
     //actualizar datos de una persona
     @PutMapping("/update/{id}")
@@ -56,6 +65,6 @@ public class ControladorNota {
                     return repositorioNota.save(existingNota);
                 })
                 .map(updatedNota -> ResponseEntity.ok(updatedNota))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la nota")));
     }
 }

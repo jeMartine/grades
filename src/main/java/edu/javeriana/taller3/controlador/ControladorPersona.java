@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,17 +36,22 @@ public class ControladorPersona {
     Mono<ResponseEntity<Persona>> getPersonaId(@PathVariable Integer id) {
         return repositorioPersona.findById(id)
                 .map(persona -> ResponseEntity.ok().body(persona))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se encontró la persona")));
     }
 
     //eliminar una persona por id
     @DeleteMapping("/delete/{id}")
     Mono<ResponseEntity<Void>> deletePersonaById(@PathVariable Integer id){
-        return repositorioPersona.deleteById(id)
-                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)))
-                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return repositorioPersona.existsById(id)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return repositorioPersona.deleteById(id)
+                                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)));
+                    } else {
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la persona con el ID proporcionado"));
+                    }
+                });
     }
-
     //actualizar datos de una persona
     @PutMapping("/update/{id}")
     Mono<ResponseEntity<Persona>> updatePersonaById(@PathVariable Integer id, @RequestBody Persona persona){
@@ -58,7 +64,7 @@ public class ControladorPersona {
                     return repositorioPersona.save(existingPersona);
                 })
                 .map(updatedPersona -> ResponseEntity.ok(updatedPersona))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la persona")));
     }
 
 }

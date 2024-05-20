@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -31,15 +32,21 @@ public class ControladorMateria {
     Mono<ResponseEntity<Materia>> getMateriaId(@PathVariable Integer id) {
         return repositorioMateria.findById(id)
                 .map(materia -> ResponseEntity.ok().body(materia))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la nota")));
     }
 
     //eliminar una materia por id
     @DeleteMapping("/delete/{id}")
     Mono<ResponseEntity<Void>> deleteMateriaById(@PathVariable Integer id){
-        return repositorioMateria.deleteById(id)
-                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)))
-                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return repositorioMateria.existsById(id)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return repositorioMateria.deleteById(id)
+                                .then(Mono.just(new ResponseEntity<Void>(HttpStatus.NO_CONTENT)));
+                    } else {
+                        return Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la materia con el ID proporcionado"));
+                    }
+                });
     }
 
     //actualizar datos de una materia
@@ -52,6 +59,6 @@ public class ControladorMateria {
                     return repositorioMateria.save(existingMateria);
                 })
                 .map(updatedMateria -> ResponseEntity.ok(updatedMateria))
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "No se encontró la nota")));
     }
 }
