@@ -10,4 +10,5 @@ import reactor.core.publisher.Mono;
 public interface RepositorioNota extends R2dbcRepository<Nota, Integer> {
     @Query("SELECT * FROM nota WHERE estudiante_id = :estudianteId")
     Flux<Nota> findByEstudianteId(Integer estudianteId);
+
 }

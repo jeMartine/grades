@@ -23,10 +23,9 @@ public class ControladorNota {
     }
 
     @GetMapping("/estudiante/{id}")
-    public Flux<ResponseEntity<Nota>> getNotasByEstudianteId(@PathVariable Integer estudianteId) {
-        return repositorioNota.findByEstudianteId(estudianteId)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+    public Flux<Nota> getNotasByEstudianteId(@PathVariable("id") Integer estudianteId) {
+        System.out.println(estudianteId);
+        return repositorioNota.findByEstudianteId(estudianteId);
     }
 
     @PostMapping("/add")

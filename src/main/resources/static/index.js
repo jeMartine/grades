@@ -1,5 +1,6 @@
 function cargaMaterias() {
     const xhttp = new XMLHttpRequest();
+
     xhttp.open("GET", "http://localhost:8080/api/v1/materias/all");
     xhttp.send();
     xhttp.onreadystatechange = function () {
@@ -157,10 +158,9 @@ function borrarCurso(id) {
     };
 }
 
-
 function cargaPersonas() {
     const xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "http://localhost:8080/api/v1/personas/all");
+    xhttp.open("GET", "http://localhost:8080/api/v1/personas/rol/E");
     xhttp.send();
     xhttp.onreadystatechange = function () {
         if (this.readyState == 4 && this.status == 200) {
@@ -173,14 +173,14 @@ function cargaPersonas() {
                 trHTML += "<td>" + object["apellido"] + "</td>";
                 trHTML += "<td>" + object["correo"] + "</td>";
                 trHTML += "<td>" + object["rol"] + "</td>";
-                trHTML +=
-                    '<td><button type="button" class="btn btn-outline-secondary" onclick="cargaNotas(' + object["id"] + ')">Ver Notas</button>';
+                trHTML += '<td><button type="button" class="btn btn-outline-secondary" onclick="cargaNotas(' + object["id"] + ')">Ver Notas</button></td>';
                 trHTML += "</tr>";
             }
             document.getElementById("personasTable").innerHTML = trHTML;
         }
     }
 }
+
 
 function edicionPersonas() {
     Swal.fire({

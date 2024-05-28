@@ -31,6 +31,12 @@ public class ControladorPersona {
         return repositorioPersona.findAll();
     }
 
+    @GetMapping("/rol/{rol}")
+    Flux<Persona> getAllByRol(@PathVariable char rol) {
+        return repositorioPersona.findPersonasRol(rol);
+    }
+
+
     //retornar una persona por id
     @GetMapping("/{id}")
     Mono<ResponseEntity<Persona>> getPersonaId(@PathVariable Integer id) {
